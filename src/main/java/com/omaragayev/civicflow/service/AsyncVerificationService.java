@@ -13,21 +13,19 @@ public class AsyncVerificationService {
     private static final Logger log = LoggerFactory.getLogger(AsyncVerificationService.class);
 
     @Async("civicTaskExecutor")
-    public CompletableFuture<Void> performBackgroundVerification(String trackingNumber, String citizenPin) {
-        log.info("[ASYNC START] Processing background verification for permit: {} | Citizen PIN: {} | Thread: {}",
-                trackingNumber, citizenPin, Thread.currentThread().getName());
+    public CompletableFuture<Void> processPermitVerificationAsync(String trackingNumber, String citizenPin, String permitType) {
+        log.info("[ASYNC-START] [{}] Dispatched verification worker for PIN: {}, Type: {}",
+                trackingNumber, citizenPin, permitType);
 
         try {
-            // Simulate intensive external governmental background registry checks (3 seconds)
+            // Simulating external governmental verification latency
             Thread.sleep(3000);
+            log.info("[ASYNC-COMPLETE] [{}] Automated registry check passed for citizen: {}",
+                    trackingNumber, citizenPin);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("[ASYNC ERROR] Verification interrupted for tracking: {}", trackingNumber, e);
-            return CompletableFuture.completedFuture(null);
+            log.error("[ASYNC-ERROR] [{}] Verification interrupted: {}", trackingNumber, e.getMessage());
         }
-
-        log.info("[ASYNC COMPLETE] Permit {} successfully passed background checks. Status updated to UNDER_REVIEW | Thread: {}",
-                trackingNumber, Thread.currentThread().getName());
 
         return CompletableFuture.completedFuture(null);
     }

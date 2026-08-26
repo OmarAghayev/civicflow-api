@@ -20,13 +20,17 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    @Operation(summary = "Generate a bearer JWT token for citizen PIN", description = "Simulates citizen authentication and returns a signed HS256 JWT.")
-    public ResponseEntity<Map<String, String>> generateToken(@RequestParam String citizenPin) {
-        String token = jwtService.generateToken(citizenPin, Map.of("role", "CITIZEN", "issuer", "CivicFlow-Auth"));
+    @Operation(summary = "Generate a bearer JWT token with custom role", description = "Issues signed tokens for testing CITIZEN, OFFICER, or ADMIN roles.")
+    public ResponseEntity<Map<String, String>> generateToken(
+            @RequestParam String citizenPin,
+            @RequestParam(defaultValue = "CITIZEN") String role
+    ) {
+        String token = jwtService.generateToken(citizenPin, Map.of("role", role.toUpperCase(), "issuer", "CivicFlow-Auth"));
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "tokenType", "Bearer",
-                "citizenPin", citizenPin
+                "citizenPin", citizenPin,
+                "role", "ROLE_" + role.toUpperCase()
         ));
     }
 }

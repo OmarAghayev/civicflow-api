@@ -46,17 +46,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         try {
             username = jwtService.extractUsername(jwt);
+            String rawRole = jwtService.extractRole(jwt);
+            String formattedRole = (rawRole != null) ? "ROLE_" + rawRole.toUpperCase() : "ROLE_CITIZEN";
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtService.isTokenValid(jwt, username)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             username,
                             null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                            Collections.singletonList(new SimpleGrantedAuthority(formattedRole))
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.info("[SECURITY] Successfully authenticated citizen: {} via JWT token", username);
+                    log.info("[SECURITY] Authenticated: {} | Assigned Role: {}", username, formattedRole);
                 }
             }
         } catch (Exception e) {
