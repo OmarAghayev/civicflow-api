@@ -49,6 +49,12 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Flyway Database Migration Engine -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
         <!-- PostgreSQL Database Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
