@@ -37,6 +37,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Spring Boot OAuth2 Client & OpenID Connect (OIDC) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
         <!-- JJWT (Java JSON Web Token) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
