@@ -10,13 +10,18 @@ import com.omaragayev.civicflow.repository.CitizenRepository;
 import com.omaragayev.civicflow.repository.PermitApplicationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
+@Transactional(readOnly = true)
 public class PermitService {
 
     private static final Logger log = LoggerFactory.getLogger(PermitService.class);
@@ -29,7 +34,11 @@ public class PermitService {
         this.permitRepository = permitRepository;
     }
 
-    @Transactional
+    @Transactional(
+            propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public PermitApplicationResponse processPermitApplication(PermitApplicationRequest request) {
         String trackingNumber = "CV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
@@ -65,7 +74,33 @@ public class PermitService {
         );
     }
 
-    @Transactional
+    public PermitApplicationResponse getPermitByTrackingNumber(String trackingNumber) {
+        PermitApplicationEntity app = permitRepository.findByTrackingNumberWithCitizen(trackingNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Permit application not found with tracking number: " + trackingNumber));
+
+        return new PermitApplicationResponse(
+                app.getTrackingNumber(),
+                app.getPermitType(),
+                app.getStatus(),
+                app.getCreatedAt()
+        );
+    }
+
+    public Page<PermitApplicationResponse> getPermitsByStatus(String status, Pageable pageable) {
+        return permitRepository.findByStatusOrderByCreatedAtDesc(status, pageable)
+                .map(app -> new PermitApplicationResponse(
+                        app.getTrackingNumber(),
+                        app.getPermitType(),
+                        app.getStatus(),
+                        app.getCreatedAt()
+                ));
+    }
+
+    @Transactional(
+            propagation = Propagation.REQUIRED,
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public PermitDecisionResponse evaluatePermitDecision(String trackingNumber, PermitDecisionRequest request, String officerUsername) {
         PermitApplicationEntity application = permitRepository.findByTrackingNumber(trackingNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Permit application not found with tracking number: " + trackingNumber));
