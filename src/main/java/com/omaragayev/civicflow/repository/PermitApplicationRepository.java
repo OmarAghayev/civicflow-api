@@ -1,6 +1,8 @@
 package com.omaragayev.civicflow.repository;
 
 import com.omaragayev.civicflow.entity.PermitApplicationEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,9 @@ import java.util.Optional;
 public interface PermitApplicationRepository extends JpaRepository<PermitApplicationEntity, Long> {
 
     Optional<PermitApplicationEntity> findByTrackingNumber(String trackingNumber);
+
+    // Leverages idx_permits_status_created composite index for high-speed pagination
+    Page<PermitApplicationEntity> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
 
     List<PermitApplicationEntity> findByStatus(String status);
 

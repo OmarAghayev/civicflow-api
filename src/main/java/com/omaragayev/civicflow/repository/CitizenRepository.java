@@ -14,6 +14,10 @@ public interface CitizenRepository extends JpaRepository<CitizenEntity, Long> {
 
     Optional<CitizenEntity> findByCitizenPin(String citizenPin);
 
+    // Uses idx_citizens_email_lower functional index
+    @Query("SELECT c FROM CitizenEntity c WHERE LOWER(c.email) = LOWER(:email)")
+    Optional<CitizenEntity> findByEmailIgnoreCase(@Param("email") String email);
+
     // Prevents N+1 query problem via JOIN FETCH
     @Query("SELECT c FROM CitizenEntity c JOIN FETCH c.permitApplications WHERE c.citizenPin = :citizenPin")
     Optional<CitizenEntity> findByCitizenPinWithPermitsFetchJoin(@Param("citizenPin") String citizenPin);
