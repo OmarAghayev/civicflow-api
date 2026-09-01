@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,11 +17,18 @@ public interface PermitApplicationRepository extends JpaRepository<PermitApplica
 
     Optional<PermitApplicationEntity> findByTrackingNumber(String trackingNumber);
 
-    // Leverages idx_permits_status_created composite index for high-speed pagination
     Page<PermitApplicationEntity> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
 
     List<PermitApplicationEntity> findByStatus(String status);
 
     @Query("SELECT p FROM PermitApplicationEntity p JOIN FETCH p.citizen WHERE p.trackingNumber = :trackingNumber")
     Optional<PermitApplicationEntity> findByTrackingNumberWithCitizen(@Param("trackingNumber") String trackingNumber);
+
+    // Finds stale submitted applications older than a cutoff threshold for batch cleanup
+    @Query("SELECT p FROM PermitApplicationEntity p WHERE p.status = :status AND p.createdAt < :threshold")
+    Page<PermitApplicationEntity> findStaleApplications(
+            @Param("status") String status,
+            @Param("threshold") LocalDateTime threshold,
+            Pageable pageable
+    );
 }
