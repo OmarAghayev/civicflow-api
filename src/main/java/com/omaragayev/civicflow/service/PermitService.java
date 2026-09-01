@@ -6,10 +6,12 @@ import com.omaragayev.civicflow.dto.response.PermitApplicationResponse;
 import com.omaragayev.civicflow.dto.response.PermitDecisionResponse;
 import com.omaragayev.civicflow.entity.CitizenEntity;
 import com.omaragayev.civicflow.entity.PermitApplicationEntity;
+import com.omaragayev.civicflow.event.PermitSubmittedEvent;
 import com.omaragayev.civicflow.repository.CitizenRepository;
 import com.omaragayev.civicflow.repository.PermitApplicationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,10 +30,14 @@ public class PermitService {
 
     private final CitizenRepository citizenRepository;
     private final PermitApplicationRepository permitRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public PermitService(CitizenRepository citizenRepository, PermitApplicationRepository permitRepository) {
+    public PermitService(CitizenRepository citizenRepository,
+                         PermitApplicationRepository permitRepository,
+                         ApplicationEventPublisher eventPublisher) {
         this.citizenRepository = citizenRepository;
         this.permitRepository = permitRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(
@@ -65,6 +71,15 @@ public class PermitService {
 
         PermitApplicationEntity savedApp = permitRepository.save(application);
         log.info("[DB-PERSIST] Persisted permit application [{}] for citizen [{}]", trackingNumber, citizen.getCitizenPin());
+
+        // Publish Domain Event (Decoupled & Transaction-Aware)
+        eventPublisher.publishEvent(new PermitSubmittedEvent(
+                savedApp.getTrackingNumber(),
+                citizen.getCitizenPin(),
+                citizen.getEmail(),
+                savedApp.getPermitType(),
+                LocalDateTime.now()
+        ));
 
         return new PermitApplicationResponse(
                 savedApp.getTrackingNumber(),
